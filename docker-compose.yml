@@ -1,0 +1,16 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: authservice-mssql
+    restart: unless-stopped
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Auth@StrongPass123"   # min 8 ký tự, có chữ hoa + số + ký tự đặc biệt
+      MSSQL_PID: "Developer"                    # bản miễn phí, không dùng production
+    volumes:
+      - mssql_data:/var/opt/mssql              # data persist khi restart container
+
+volumes:
+  mssql_data:

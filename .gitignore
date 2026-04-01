@@ -1,0 +1,156 @@
+# ═══════════════════════════════════════════
+#  Build output
+# ═══════════════════════════════════════════
+[Dd]ebug/
+[Rr]elease/
+[Dd]ebugPublic/
+[Rr]eleleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+publish/
+
+# ═══════════════════════════════════════════
+#  Visual Studio
+# ═══════════════════════════════════════════
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.VC.VC.opendb
+
+# ═══════════════════════════════════════════
+#  NuGet
+# ═══════════════════════════════════════════
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+nuget.config
+
+# ═══════════════════════════════════════════
+#  .NET
+# ═══════════════════════════════════════════
+project.lock.json
+project.fragment.lock.json
+*.lock.json
+.dotnet/
+.dotnet-tools/
+global.json
+
+# ═══════════════════════════════════════════
+#  Test
+# ═══════════════════════════════════════════
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+TestResult.xml
+*.trx
+coverage*.xml
+coverage*.json
+coverage*.cobertura.xml
+*.coverage
+*.coveragexml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# ═══════════════════════════════════════════
+#  Entity Framework
+# ═══════════════════════════════════════════
+# Không ignore thư mục Migrations — cần commit
+# *.cs trong Migrations/ nên được track
+
+# ═══════════════════════════════════════════
+#  Secrets & Config nhạy cảm
+# ═══════════════════════════════════════════
+**/secrets.json
+**/*secrets*.json
+*.pfx
+*.p12
+*.key
+*.pem
+*.env
+.env
+.env.*
+!.env.example
+
+# secrets.xml dùng cho User Secrets của ASP.NET Core
+secrets.xml
+
+# ═══════════════════════════════════════════
+#  Docker
+# ═══════════════════════════════════════════
+.dockerignore
+docker-compose.override.yml
+
+# ═══════════════════════════════════════════
+#  Rider (JetBrains)
+# ═══════════════════════════════════════════
+.idea/
+*.sln.iml
+
+# ═══════════════════════════════════════════
+#  VS Code
+# ═══════════════════════════════════════════
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ═══════════════════════════════════════════
+#  OS
+# ═══════════════════════════════════════════
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ═══════════════════════════════════════════
+#  Serilog / Logs
+# ═══════════════════════════════════════════
+logs/
+*.log
+log-*.txt
+
+# ═══════════════════════════════════════════
+#  Swagger
+# ═══════════════════════════════════════════
+swagger.json
+
+# ═══════════════════════════════════════════
+#  Misc
+# ═══════════════════════════════════════════
+*.cache
+*.tmp
+*.bak
+*.orig
+*~
+**/Migrations/

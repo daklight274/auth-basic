@@ -21,16 +21,22 @@ namespace Auth.Application.Services
         private readonly IJwtService _jwtService;
         private readonly ILogger<AuthService> _logger;
         private readonly JwtSettings _jwt;
+        private readonly IEmailService _emailService;
+        private readonly IRedisService _redis;
 
-        public AuthService(AppDbContext context, IJwtService jwtService,ILogger<AuthService> logger,IOptions<JwtSettings> jwt)
+        private const string VerificationPrefix = "email_verification:";
+
+        public AuthService(AppDbContext context, IJwtService jwtService,ILogger<AuthService> logger,IOptions<JwtSettings> jwt,IEmailService emailService,IRedisService redisService)
         {
             _context = context;
             _jwtService = jwtService;
             _logger = logger;
             _jwt = jwt.Value;
+            _emailService = emailService;
+            _redis = redisService;
         }
 
-        public async Task<AuthResponse> RegisterAsync(RegisterRequest req, string ipAddress)
+        public async Task<string> RegisterAsync(RegisterRequest req, string ipAddress)
         {
             var email = req.Email.ToLower();
 
@@ -56,18 +62,23 @@ namespace Auth.Application.Services
                 Email = req.Email.ToLower(),
                 PasswordHash = hash,
                 FullName = req.FullName,
-                Role = "User",
+                Role = User.Names.User,
+                IsEmailVerified = false,
             };
 
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
+
+            var code = GenerateVerificationCode();
+            await _redis.SetAsync($"{VerificationPrefix}{user.Email}", code, TimeSpan.FromMinutes(15));
+            await _emailService.SendVerificationCodeAsync(user.Email, code);
 
             // KHÔNG log password, hash, hay bất kỳ sensitive data nào
             _logger.LogInformation(
                 "Register success — UserId={UserId} Email={Email}",
                 user.Id, user.Email);
             // 4. Return token ngay (hoặc bắt verify email trước — Giai đoạn 3)
-            return await BuildAuthResponseAsync(user, ipAddress);
+            return "Registration successful. Check your email for the 6-digit verification code.";
         }
 
         public async Task<AuthResponse> LoginAsync(LoginRequest req, string ipAddress)
@@ -78,7 +89,7 @@ namespace Auth.Application.Services
             // 1. Lookup user — KHÔNG tiết lộ "email không tồn tại" vs "sai password"
             //    → luôn trả về cùng lỗi 401 để tránh user enumeration
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == email);
+                .FirstOrDefaultAsync(u => u.Email == email && u.IsEmailVerified == true);
 
             // 2. Verify password
             // BCrypt.Verify tự extract salt từ hash, hash lại input và so sánh
@@ -168,6 +179,31 @@ namespace Auth.Application.Services
             _logger.LogInformation("Token revoked UserId={UserId}", existing.UserId);
         }
 
+        public async Task<AuthResponse> VerifyEmailAsync(VerifyEmailRequestDto dto,string ip)
+        {
+            var email = dto.Email.Trim().ToLowerInvariant();
+            var redisKey = $"{VerificationPrefix}{email}";
+            var storedCode = await _redis.GetAsync(redisKey);
+
+            if (storedCode is null)
+                throw new UnauthorizedException("Verification code has expired. Please register again.");
+
+            if (storedCode != dto.Code.Trim())
+                throw new ConflictException("Invalid verification code");
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
+            if (user is null)
+                throw new UnauthorizedException("User not found");
+
+            user.IsEmailVerified = true;
+            await _context.SaveChangesAsync();
+            await _redis.DeleteAsync(redisKey);
+
+            _logger.LogInformation("Email verified: {Email}", email);
+            return await BuildAuthResponseAsync(user, ip);
+        }
+
         // ── HELPERS ──────────────────────────────────────────────────
         private async Task<AuthResponse> BuildAuthResponseAsync(User user, string ip)
         {
@@ -217,5 +253,7 @@ namespace Auth.Application.Services
         // Custom exceptions → tương ứng HTTP status code
         public class ConflictException(string msg) : Exception(msg);
         public class UnauthorizedException(string msg) : Exception(msg);
+        private static string GenerateVerificationCode()
+            => Random.Shared.Next(100_000, 999_999).ToString();
     }
 }

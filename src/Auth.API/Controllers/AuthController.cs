@@ -23,8 +23,8 @@ namespace Auth.API.Controllers
         public async Task<IActionResult> Register(RegisterRequest req)
         {
             var result = await _authService.RegisterAsync(req, GetIpAddress());
-            SetRefreshTokenCookie(result.RefreshToken);
-            return StatusCode(201, ToSafeResponse(result));
+            //SetRefreshTokenCookie(result.RefreshToken);
+            return StatusCode(201, result);
         }
 
         [HttpPost("login")]
@@ -61,9 +61,9 @@ namespace Auth.API.Controllers
         }
 
         // Endpoint demo [Authorize] — trả về thông tin từ JWT claims
-        [HttpGet("me")]
+        [HttpGet("user/me")]
         [Authorize]
-        public IActionResult Me()
+        public IActionResult UserMe()
         {
             // ClaimsPrincipal được populate bởi JWT middleware sau khi verify token
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
@@ -73,6 +73,28 @@ namespace Auth.API.Controllers
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 
             return Ok(new { userId, email, role });
+        }
+
+        [HttpGet("admin/me")]
+        [Authorize(Roles = "Admin")]
+        public IActionResult AdminMe()
+        {
+            // ClaimsPrincipal được populate bởi JWT middleware sau khi verify token
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                      ?? User.FindFirst("sub")?.Value;
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                     ?? User.FindFirst(ClaimTypes.Email)?.Value;
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            return Ok(new { userId, email, role });
+        }
+
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequestDto dto)
+        {
+            var result = await _authService.VerifyEmailAsync(dto,GetIpAddress());
+            SetRefreshTokenCookie(result.RefreshToken);
+            return StatusCode(200, ToSafeResponse(result));
         }
 
 

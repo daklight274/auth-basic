@@ -11,6 +11,12 @@ services:
       MSSQL_PID: "Developer"                    # bản miễn phí, không dùng production
     volumes:
       - mssql_data:/var/opt/mssql              # data persist khi restart container
-
+  
+  redis:
+    image: redis:8
+    container_name: redis
+    command: redis-server --requirepass Anhquang4mat@2002
+    ports:
+      - "6379:6379"
 volumes:
   mssql_data:

@@ -27,7 +27,9 @@ namespace Auth.Infrastructure.Data
                 e.HasIndex(u => u.Email).IsUnique();
                 e.Property(u => u.PasswordHash).HasMaxLength(512).IsRequired();
                 e.Property(u => u.FullName).HasMaxLength(128).IsRequired();
-                e.Property(u => u.Role).HasMaxLength(32).HasDefaultValue("User");
+                e.Property(u => u.Role).HasMaxLength(32).IsRequired();
+                e.Property(u => u.CreatedAt).IsRequired();
+                e.Property(u => u.IsEmailVerified).IsRequired();
             });
 
             mb.Entity<RefreshToken>(e =>

@@ -1,6 +1,7 @@
 using Auth.Application.IServices;
 using Auth.Application.Services;
 using Auth.Application.Settings;
+using Auth.Domain.Entities;
 using Auth.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
+using StackExchange.Redis;
 using System.Text;
 using static Auth.API.Controllers.AuthController;
 
@@ -40,6 +42,13 @@ try
 
     builder.Services.AddDbContext<AppDbContext>(opts =>
         opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
+    // ── Redis ──────────────────────────────────────────────────────────────────────
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+        ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
+
+    // Smtp
+    builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
     var jwtSection = builder.Configuration.GetSection("Jwt");
     builder.Services.Configure<JwtSettings>(jwtSection);
@@ -78,6 +87,8 @@ try
 
     builder.Services.AddScoped<IJwtService, JwtService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IRedisService, RedisService>();
 
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
@@ -115,6 +126,12 @@ try
                 Array.Empty<string>()
             }
         });
+    });
+
+    builder.Services.AddAuthorization(opt =>
+    {
+        opt.AddPolicy("AdminOnly", p => p.RequireRole(User.Names.Admin));
+        opt.AddPolicy("UserOnly", p => p.RequireRole(User.Names.User));
     });
 
     var app = builder.Build();

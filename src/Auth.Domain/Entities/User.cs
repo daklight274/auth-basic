@@ -12,7 +12,14 @@ namespace Auth.Domain.Entities
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
-        public string Role { get; set; } = "User";
+        public string Role { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsEmailVerified { get; set; } = false;
+
+        public static class Names
+        {
+            public const string Admin = "Admin";
+            public const string User = "User";
+        }
     }
 }
